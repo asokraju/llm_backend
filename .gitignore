@@ -115,8 +115,10 @@ temp/
 *.tmp
 
 # Test files created during development
-test_*.py
+# (Exclude test files in root, but include everything in tests/ directory)
+/test_*.py
 !tests/
+!tests/**/*.py
 
 # Patches (these are temporary fixes)
 patches/

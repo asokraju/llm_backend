@@ -1,6 +1,7 @@
 """Pytest configuration and shared fixtures."""
 
 import pytest
+import pytest_asyncio
 import asyncio
 import os
 from typing import AsyncGenerator, Generator
@@ -67,18 +68,23 @@ def mock_lightrag_service():
 @pytest.fixture
 def test_client(mock_lightrag_service) -> Generator[TestClient, None, None]:
     """Create a test client for the FastAPI app."""
+    # Import the app first, then patch the global rag_service
+    from src.api.main import app
     with patch("src.api.main.rag_service", mock_lightrag_service):
-        from src.api.main import app
         with TestClient(app) as client:
             yield client
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def async_client(mock_lightrag_service) -> AsyncGenerator[AsyncClient, None]:
     """Create an async test client for the FastAPI app."""
+    # Import the app first, then patch the global rag_service
+    from src.api.main import app
     with patch("src.api.main.rag_service", mock_lightrag_service):
-        from src.api.main import app
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        # Use httpx.AsyncClient for ASGI testing
+        from httpx import ASGITransport
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
             yield client
 
 
