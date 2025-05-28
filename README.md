@@ -27,10 +27,8 @@ A production-ready RAG (Retrieval-Augmented Generation) system built with LightR
 git clone <repository-url>
 cd llm_backend
 
-# Clone and patch LightRAG (required for Python 3.13 compatibility)
-git clone https://github.com/HKUDS/LightRAG.git
+# Install LightRAG (included with Python 3.13 fixes)
 cd LightRAG
-git apply ../patches/lightrag-python313-fix.patch
 pip install -e .
 cd ..
 
