@@ -127,11 +127,21 @@ check_services() {
     
     # Check Redis
     echo -n "Checking Redis... "
+    # Try different methods to check Redis
     if redis-cli ping > /dev/null 2>&1; then
         echo -e "${GREEN}✓ Running${NC}"
+    elif nc -z localhost 6379 2>/dev/null; then
+        echo -e "${GREEN}✓ Running (port 6379 open)${NC}"
+    elif timeout 2 bash -c 'cat < /dev/null > /dev/tcp/localhost/6379' 2>/dev/null; then
+        echo -e "${GREEN}✓ Running (port accessible)${NC}"
     else
-        echo -e "${RED}✗ Not running${NC}"
-        services_ok=false
+        # Final check - see if docker container is running
+        if docker ps --format '{{.Names}}' 2>/dev/null | grep -q rag_redis; then
+            echo -e "${GREEN}✓ Running (docker container up)${NC}"
+        else
+            echo -e "${RED}✗ Not running${NC}"
+            services_ok=false
+        fi
     fi
     
     # Check Prometheus

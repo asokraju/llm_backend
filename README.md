@@ -390,16 +390,20 @@ python -m src.api.main
 
 ### Testing
 
+The project includes a comprehensive test suite with 100+ tests covering unit, integration, infrastructure, and performance testing.
+
+**Quick Start:**
 ```bash
-# Install test dependencies
-pip install pytest pytest-asyncio httpx
+# Run all tests with the test runner
+python run_tests.py
 
-# Run tests
-pytest tests/
-
-# Test specific endpoint
-pytest tests/test_documents.py -v
+# Run specific test categories
+python run_tests.py --unit
+python run_tests.py --integration
+python run_tests.py --infrastructure
 ```
+
+For detailed testing documentation, see [TESTING.md](TESTING.md).
 
 ### Code Quality
 

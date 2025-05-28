@@ -92,16 +92,31 @@ class TestRunner:
                 else:
                     print(f"Checking {name}... {COLORS['YELLOW']}⚠ Not running (optional){COLORS['RESET']}")
                     
-        # Special check for Redis using redis-cli
+        # Special check for Redis using redis-cli or network
+        redis_ok = False
         try:
             result = subprocess.run(['redis-cli', 'ping'], capture_output=True, text=True)
             if result.stdout.strip() == 'PONG':
                 print(f"Checking Redis... {COLORS['GREEN']}✓ Running{COLORS['RESET']}")
-            else:
-                print(f"Checking Redis... {COLORS['RED']}✗ Not running{COLORS['RESET']}")
-                all_ok = False
+                redis_ok = True
         except FileNotFoundError:
-            print(f"Checking Redis... {COLORS['YELLOW']}⚠ redis-cli not found{COLORS['RESET']}")
+            # Try network check as fallback
+            try:
+                import socket
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.settimeout(2)
+                result = sock.connect_ex(('localhost', 6379))
+                sock.close()
+                if result == 0:
+                    print(f"Checking Redis... {COLORS['GREEN']}✓ Running (port 6379 open){COLORS['RESET']}")
+                    redis_ok = True
+                else:
+                    print(f"Checking Redis... {COLORS['RED']}✗ Not running{COLORS['RESET']}")
+            except:
+                print(f"Checking Redis... {COLORS['YELLOW']}⚠ Could not verify{COLORS['RESET']}")
+        
+        if not redis_ok and "Redis" in required_services:
+            all_ok = False
             
         if not all_ok:
             print(f"\n{COLORS['RED']}Some required services are not running!{COLORS['RESET']}")
