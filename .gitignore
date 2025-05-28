@@ -120,5 +120,5 @@ temp/
 !tests/
 !tests/**/*.py
 
-# Patches (these are temporary fixes)
-patches/
+# Patches - we want to track these!
+# patches/

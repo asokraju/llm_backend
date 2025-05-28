@@ -1,0 +1,13 @@
+--- a/LightRAG/lightrag/llm/ollama.py
++++ b/LightRAG/lightrag/llm/ollama.py
+@@ -66,7 +66,9 @@ async def _ollama_model_if_cache(
+         messages = []
+         if system_prompt:
+             messages.append({"role": "system", "content": system_prompt})
+-        messages.extend(history_messages)
++        # Handle case where history_messages might be None
++        if history_messages is not None:
++            messages.extend(history_messages)
+         messages.append({"role": "user", "content": prompt})
+ 
+         response = await ollama_client.chat(model=model, messages=messages, **kwargs)

@@ -1,0 +1,30 @@
+diff --git a/lightrag/kg/networkx_impl.py b/lightrag/kg/networkx_impl.py
+index c92bbd30..a5fdc94c 100644
+--- a/lightrag/kg/networkx_impl.py
++++ b/lightrag/kg/networkx_impl.py
+@@ -11,8 +11,8 @@ import pipmaster as pm
+ if not pm.is_installed("networkx"):
+     pm.install("networkx")
+ 
+-if not pm.is_installed("graspologic"):
+-    pm.install("graspologic")
++# Graspologic removed - not used in the codebase
++# Previously attempted to install graspologic here, but it's not needed
+ 
+ import networkx as nx
+ from .shared_storage import (
+diff --git a/lightrag/llm/ollama.py b/lightrag/llm/ollama.py
+index c86aea1c..22532d19 100644
+--- a/lightrag/llm/ollama.py
++++ b/lightrag/llm/ollama.py
+@@ -66,7 +66,9 @@ async def _ollama_model_if_cache(
+         messages = []
+         if system_prompt:
+             messages.append({"role": "system", "content": system_prompt})
+-        messages.extend(history_messages)
++        # Handle case where history_messages might be None
++        if history_messages is not None:
++            messages.extend(history_messages)
+         messages.append({"role": "user", "content": prompt})
+ 
+         response = await ollama_client.chat(model=model, messages=messages, **kwargs)
