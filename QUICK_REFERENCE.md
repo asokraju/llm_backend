@@ -1,5 +1,64 @@
 # Quick Reference Guide
 
+## 🏗️ Pipeline Architecture
+
+```mermaid
+graph LR
+    subgraph "Inputs"
+        I1[Documents<br/>PDF/DOCX/HTML]
+        I2[User Queries]
+    end
+    
+    subgraph "Processing"
+        API[API<br/>:8000]
+        LLM[Ollama LLM<br/>:11434]
+        VDB[Qdrant<br/>:6333]
+        CACHE[Redis<br/>:6379]
+    end
+    
+    subgraph "Outputs"
+        O1[Answers]
+        O2[Knowledge Graph]
+        O3[Metrics]
+    end
+    
+    I1 --> API
+    I2 --> API
+    API --> LLM
+    API --> VDB
+    API --> CACHE
+    LLM --> O1
+    VDB --> O2
+    API --> O3
+    
+    style API fill:#f9f
+    style LLM fill:#bbf
+    style VDB fill:#bfb
+```
+
+### Pipeline Flow
+1. **Document Input** → API → Chunking → Embeddings → Vector DB
+2. **Query Input** → API → Vector Search + LLM → Answer
+3. **Monitoring** → Prometheus → Grafana Dashboards
+
+### 📥 Supported Inputs
+
+| Type | Formats | Endpoint | Example |
+|------|---------|----------|---------|
+| **Documents** | PDF, DOCX, PPTX, XLSX, HTML, MD, TXT | POST /documents | `{"documents": ["text..."]}` |
+| **Queries** | Natural language text | POST /query | `{"question": "...", "mode": "hybrid"}` |
+| **Query Modes** | naive, local, global, hybrid | - | Use in query endpoint |
+
+### 📤 System Outputs
+
+| Output | Description | Access |
+|--------|-------------|---------|
+| **Answers** | Context-aware responses | Query API response |
+| **Knowledge Graph** | Entities & relationships | GET /graph |
+| **Embeddings** | 768-dimensional vectors | Stored in Qdrant |
+| **Metrics** | Performance stats | GET /metrics or Grafana |
+| **Logs** | Structured JSON logs | docker logs rag_api |
+
 ## 🚀 Quick Start
 ```bash
 # Clone and setup

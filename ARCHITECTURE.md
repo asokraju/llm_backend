@@ -4,30 +4,179 @@
 
 ```mermaid
 graph TB
-    subgraph "User Interface"
-        A[User] -->|HTTP Request| B[NGINX API Gateway]
-        B -->|Rate Limited| C[FastAPI Server]
+    subgraph "Input Sources"
+        USER[Users/Apps]
+        FILES[File Uploads<br/>PDF/DOCX/HTML/MD]
+        APIS[External APIs]
     end
 
-    subgraph "LightRAG Core"
-        C -->|Document Upload| D[LightRAG Service]
-        C -->|Query Request| D
-        D -->|Process Documents| E[Document Processing]
-        D -->|Process Query| F[Query Processing]
+    subgraph "Gateway Layer"
+        NGINX[NGINX<br/>Load Balancer<br/>Rate Limiting<br/>SSL Termination]
     end
 
-    subgraph "Ollama Services"
-        E -->|Generate Embeddings| G[Nomic Embed Model]
-        F -->|Generate Embeddings| G
-        F -->|Generate Answer| H[Qwen 2.5 32B LLM]
+    subgraph "Application Layer"
+        API[FastAPI<br/>REST Endpoints<br/>Auth & Validation<br/>Request Queue]
+        
+        subgraph "LightRAG Core"
+            LRAG[LightRAG Service<br/>Orchestrator]
+            DOCPROC[Document Processor<br/>Docling Integration]
+            CHUNK[Text Chunker<br/>1200 chars/100 overlap]
+            EXTRACT[Entity Extractor<br/>NER + Relations]
+            GRAPH[Graph Builder<br/>Knowledge Graph]
+            QENGINE[Query Engine<br/>4 Modes]
+        end
+    end
+
+    subgraph "AI/ML Layer"
+        subgraph "Ollama Service"
+            OLLAMA[Ollama Server<br/>Model Manager]
+            QWEN[Qwen 2.5 7B<br/>Text Generation]
+            NOMIC[Nomic-Embed<br/>768D Embeddings]
+        end
     end
 
     subgraph "Storage Layer"
-        E -->|Store Graph| I[LightRAG Storage]
-        I -->|Entity Graph| J[Knowledge Graph]
-        I -->|Relationships| J
-        I -->|Document Chunks| K[Text Storage]
+        subgraph "Vector Database"
+            QDRANT[Qdrant<br/>Vector Search<br/>6333/6334]
+            COLL1[entities<br/>collection]
+            COLL2[chunks<br/>collection]
+            COLL3[relations<br/>collection]
+        end
+        
+        subgraph "Cache/Queue"
+            REDIS[Redis<br/>LLM Cache<br/>Task Queue<br/>6379]
+        end
+        
+        subgraph "File Storage"
+            RAGDATA[./rag_data<br/>JSON Storage<br/>Graph Data]
+        end
     end
+
+    subgraph "Monitoring Layer"
+        PROM[Prometheus<br/>Metrics Collector<br/>9090]
+        GRAF[Grafana<br/>Dashboards<br/>3000]
+        METRICS[Custom Metrics<br/>API Performance<br/>LLM Usage]
+    end
+
+    %% Input Flow
+    USER --> NGINX
+    FILES --> NGINX
+    APIS --> NGINX
+    
+    %% Gateway to API
+    NGINX --> API
+    
+    %% Document Processing Pipeline
+    API -->|Insert| LRAG
+    LRAG --> DOCPROC
+    DOCPROC --> CHUNK
+    CHUNK --> EXTRACT
+    EXTRACT --> GRAPH
+    
+    %% Embedding Generation
+    CHUNK -->|Text| OLLAMA
+    OLLAMA --> NOMIC
+    NOMIC -->|768D Vectors| QDRANT
+    
+    %% Entity/Relation Storage
+    EXTRACT -->|Entities| COLL1
+    CHUNK -->|Chunks| COLL2
+    GRAPH -->|Relations| COLL3
+    
+    %% Query Processing
+    API -->|Query| QENGINE
+    QENGINE -->|Search| QDRANT
+    QENGINE -->|Generate| QWEN
+    
+    %% Caching
+    QWEN -->|Cache| REDIS
+    API -->|Queue| REDIS
+    
+    %% Local Storage
+    GRAPH -->|Persist| RAGDATA
+    
+    %% Monitoring
+    API -->|Metrics| PROM
+    OLLAMA -->|Metrics| PROM
+    QDRANT -->|Metrics| PROM
+    PROM -->|Display| GRAF
+    
+    %% Styling
+    style API fill:#f9f,stroke:#333,stroke-width:4px
+    style OLLAMA fill:#bbf,stroke:#333,stroke-width:2px
+    style QDRANT fill:#bfb,stroke:#333,stroke-width:2px
+    style REDIS fill:#fbb,stroke:#333,stroke-width:2px
+```
+
+## Detailed Component Interactions
+
+### Document Processing Pipeline
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant API
+    participant LightRAG
+    participant Docling
+    participant Ollama
+    participant Qdrant
+    
+    User->>API: POST /documents
+    API->>LightRAG: insert_documents
+    LightRAG->>Docling: Parse document
+    Docling-->>LightRAG: Structured text
+    LightRAG->>LightRAG: Chunk text
+    
+    loop For each chunk
+        LightRAG->>Ollama: Generate embedding
+        Ollama-->>LightRAG: 768D vector
+        LightRAG->>Qdrant: Store vector
+    end
+    
+    LightRAG->>Ollama: Extract entities/relations
+    Ollama-->>LightRAG: Graph data
+    LightRAG->>Qdrant: Store graph
+    LightRAG-->>API: Success
+    API-->>User: 200 OK
+```
+
+### Query Processing Pipeline
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant API
+    participant LightRAG
+    participant Qdrant
+    participant Ollama
+    participant Redis
+    
+    User->>API: POST /query
+    API->>Redis: Check cache
+    
+    alt Cache hit
+        Redis-->>API: Cached response
+        API-->>User: 200 OK + answer
+    else Cache miss
+        API->>LightRAG: process_query
+        LightRAG->>Ollama: Embed query
+        Ollama-->>LightRAG: Query vector
+        
+        par Vector search
+            LightRAG->>Qdrant: Search chunks
+            Qdrant-->>LightRAG: Relevant chunks
+        and Graph search
+            LightRAG->>Qdrant: Search entities
+            Qdrant-->>LightRAG: Related entities
+        end
+        
+        LightRAG->>Ollama: Generate answer
+        Ollama-->>LightRAG: Response
+        LightRAG-->>API: Answer
+        API->>Redis: Cache response
+        API-->>User: 200 OK + answer
+    end
+```
 
     subgraph "Query Modes"
         F -->|Naive Mode| L[Direct Search]

@@ -22,6 +22,121 @@ A production-ready RAG (Retrieval-Augmented Generation) system built with LightR
 - **Real-time Monitoring**: Prometheus metrics with Grafana dashboards
 - **API Gateway**: NGINX with rate limiting and SSL termination
 
+## 🏗️ System Architecture
+
+```mermaid
+graph TB
+    subgraph "Input Layer"
+        U[Users/Applications]
+        D[Documents<br/>PDF/DOCX/HTML/MD]
+        Q[Queries<br/>Questions]
+    end
+
+    subgraph "API Gateway"
+        N[NGINX<br/>Port 80/443]
+    end
+
+    subgraph "Core Services"
+        API[FastAPI<br/>Port 8000<br/>REST API]
+        
+        subgraph "LLM Services"
+            O[Ollama<br/>Port 11434]
+            LLM[Qwen 2.5 7B<br/>Text Generation]
+            EMB[Nomic-Embed<br/>768D Embeddings]
+        end
+        
+        subgraph "Storage Layer"
+            QD[Qdrant<br/>Port 6333<br/>Vector DB]
+            R[Redis<br/>Port 6379<br/>Cache/Queue]
+        end
+    end
+
+    subgraph "LightRAG Pipeline"
+        DOC[Document<br/>Processor]
+        CHUNK[Text<br/>Chunker]
+        EXTRACT[Entity/Relation<br/>Extractor]
+        KG[Knowledge<br/>Graph Builder]
+        QUERY[Query<br/>Engine]
+    end
+
+    subgraph "Monitoring"
+        P[Prometheus<br/>Port 9090<br/>Metrics]
+        G[Grafana<br/>Port 3000<br/>Dashboards]
+    end
+
+    subgraph "Outputs"
+        ANS[Answers]
+        GRAPH[Knowledge Graph]
+        METRICS[System Metrics]
+    end
+
+    %% Input Flow
+    U --> N
+    D --> N
+    Q --> N
+    
+    %% API Gateway Routes
+    N --> API
+    N --> P
+    N --> G
+    
+    %% Document Processing Flow
+    API -->|Insert Docs| DOC
+    DOC --> CHUNK
+    CHUNK --> EXTRACT
+    EXTRACT -->|Entities/Relations| KG
+    
+    %% Embedding Flow
+    CHUNK -->|Text| EMB
+    EMB -->|768D Vectors| QD
+    
+    %% LLM Processing
+    EXTRACT -->|Generate| LLM
+    QUERY -->|Generate| LLM
+    O --> LLM
+    O --> EMB
+    
+    %% Storage
+    KG -->|Store Graph| QD
+    API -->|Cache| R
+    
+    %% Query Flow
+    API -->|Query| QUERY
+    QUERY -->|Search| QD
+    QUERY -->|Retrieve| R
+    
+    %% Outputs
+    QUERY --> ANS
+    KG --> GRAPH
+    API --> METRICS
+    
+    %% Monitoring
+    API -->|Metrics| P
+    P -->|Data| G
+
+    style API fill:#f9f,stroke:#333,stroke-width:4px
+    style O fill:#bbf,stroke:#333,stroke-width:2px
+    style QD fill:#bfb,stroke:#333,stroke-width:2px
+    style R fill:#fbb,stroke:#333,stroke-width:2px
+```
+
+### Data Flow Description
+
+1. **Input Types**:
+   - **Documents**: PDF, DOCX, PPTX, XLSX, HTML, Markdown
+   - **Queries**: Natural language questions
+   - **Modes**: Naive, Local, Global, Hybrid
+
+2. **Processing Pipeline**:
+   - Documents → Chunking → Entity/Relation Extraction → Knowledge Graph
+   - Text → Embeddings → Vector Storage
+   - Queries → Vector Search + Graph Traversal → Answer Generation
+
+3. **Output Types**:
+   - **Answers**: Context-aware responses using RAG
+   - **Knowledge Graph**: Entities and relationships visualization
+   - **Metrics**: Performance and usage statistics
+
 ## 📋 Prerequisites
 
 - Docker and Docker Compose
