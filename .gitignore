@@ -1,0 +1,122 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Project specific
+# Allow data directory and PDFs (they're not too large)
+# Exclude other large document formats
+*.docx
+*.xlsx
+*.pptx
+
+# RAG working directories and cache
+rag_data/
+test_rag_data/
+*.json
+!.env.example
+
+# Logs
+logs/
+*.log
+api.log
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Vector databases
+qdrant_storage/
+qdrant_data/
+
+# Redis data
+redis_data/
+
+# Ollama models
+ollama_models/
+
+# Docker volumes
+docker-volumes/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Test files created during development
+test_*.py
+!tests/
+
+# Patches (these are temporary fixes)
+patches/

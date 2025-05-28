@@ -1,0 +1,83 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main, develop, fix-production-issues ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Cache pip packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pipmaster
+        pip install -r requirements.txt
+        pip install pytest pytest-asyncio pytest-cov
+        cd LightRAG && pip install -e . && cd ..
+    
+    - name: Run tests with coverage
+      env:
+        RAG_API_KEY_ENABLED: "false"
+        RAG_API_KEYS: "test-key"
+        RAG_LLM_HOST: "http://localhost:11434"
+        RAG_RAG_WORKING_DIR: "./test_rag_data"
+      run: |
+        pytest tests/ -v --cov=src --cov-report=xml --cov-report=term-missing
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+  lint:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.12"
+    
+    - name: Install linting tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install black isort flake8 mypy
+    
+    - name: Check code formatting with black
+      run: black --check src/ tests/
+    
+    - name: Check import sorting with isort
+      run: isort --check-only src/ tests/
+    
+    - name: Lint with flake8
+      run: flake8 src/ tests/ --max-line-length=100 --extend-ignore=E203,W503
+    
+    - name: Type checking with mypy
+      run: mypy src/ --ignore-missing-imports --no-strict-optional
