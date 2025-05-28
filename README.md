@@ -2,6 +2,16 @@
 
 A production-ready RAG (Retrieval-Augmented Generation) system built with LightRAG, featuring knowledge graphs, multi-modal document processing, and comprehensive monitoring.
 
+## 📚 Documentation
+
+| Document | Description |
+|----------|-------------|
+| [QUICK_REFERENCE.md](QUICK_REFERENCE.md) | Quick commands, URLs, and common operations |
+| [SERVICES.md](SERVICES.md) | Detailed guide for all 7 services |
+| [TESTING.md](TESTING.md) | Comprehensive testing documentation |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | System design and architecture |
+| [DEPLOYMENT.md](DEPLOYMENT.md) | Production deployment guide |
+
 ## 🚀 Features
 
 - **Graph-based RAG**: Enhanced retrieval using knowledge graphs with entities and relationships
