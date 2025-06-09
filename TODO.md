@@ -503,5 +503,163 @@ context = await rag.aquery("query", QueryParam(only_need_context=True))
 - [ ] Design academic citation format templates
 - [ ] Create source-aware prompt templates
 
+## Docling Technical Architecture Investigation 🔍
+
+### ✅ DEFINITIVE ANSWER: DOCLING USES BUILT-IN AI MODELS, NOT EXTERNAL LLMS
+
+**Investigation completed on 2025-06-09 examining actual Docling implementation code.**
+
+### 1. Core Architecture - Computer Vision Models Only
+
+**Docling uses specialized CV/AI models but does NOT use external LLMs:**
+
+#### Primary Models (Always Used):
+1. **LayoutModel** (`ds4sd/docling-models` - HuggingFace)
+   - **Architecture**: RT-DETR (Real-Time Detection Transformer)
+   - **Purpose**: Object detection for page layout analysis
+   - **Training**: DocLayNet dataset + proprietary data
+   - **Detects**: Text blocks, tables, images, captions, headers, footers, etc.
+   - **File**: `docling_ibm_models.layoutmodel.LayoutPredictor`
+
+2. **TableStructureModel** (`ds4sd/docling-models` - HuggingFace) 
+   - **Architecture**: TableFormer (Vision Transformer for table structure)
+   - **Purpose**: Table structure recognition and cell detection
+   - **Training**: Specialized table structure datasets
+   - **Output**: Row/column structure, cell boundaries, header detection
+
+3. **OCR Models** (Traditional computer vision)
+   - **EasyOCR** (default): Traditional OCR for text extraction
+   - **Tesseract**: Alternative OCR engine
+   - **RapidOCR**: Lightweight OCR option
+
+#### Optional Models (Feature-specific):
+4. **CodeFormulaModel** (Only if enabled)
+   - **Purpose**: Mathematical formula and code block detection
+   - **Architecture**: Specialized CV model for code/formula recognition
+
+5. **DocumentPictureClassifier** (Only if enabled)
+   - **Purpose**: Image classification within documents
+   - **Architecture**: Traditional image classification model
+
+### 2. Optional Vision Language Models (VLMs) - NOT LLMs
+
+**These are small vision-language models, NOT large language models:**
+
+#### Built-in VLM Options (Optional):
+1. **SmolVLM-256M-Instruct** (`HuggingFaceTB/SmolVLM-256M-Instruct`)
+   - **Size**: 256M parameters (ultra-compact)
+   - **Purpose**: Image description for pictures in documents
+   - **Architecture**: Vision-language model (not LLM)
+   - **Usage**: Only for picture description if enabled
+
+2. **Granite-Vision-3.1-2B** (`ibm-granite/granite-vision-3.1-2b-preview`)
+   - **Size**: 2B parameters
+   - **Purpose**: Document understanding and OCR
+   - **Architecture**: Vision-language model specifically for documents
+   - **Usage**: Alternative VLM for picture description
+
+#### API-based VLM (External, Optional):
+3. **Ollama Integration** (Configuration only)
+   - **Default URL**: `http://localhost:11434/v1/chat/completions`
+   - **Purpose**: External VLM service for picture description
+   - **Usage**: Only if configured and picture description enabled
+   - **Models**: granite3.2-vision:2b (via Ollama API)
+
+### 3. What "Accelerator device: cuda:0" Messages Mean
+
+**The CUDA messages refer to:**
+- Loading computer vision models (LayoutModel, TableStructureModel) onto GPU
+- Initializing PyTorch/Transformers models on CUDA devices
+- **NOT** LLM inference - these are CV model initializations
+
+**Code Evidence:**
+```python
+# From layout_model.py
+self.layout_predictor = LayoutPredictor(
+    artifact_path=str(artifacts_path),
+    device=device,  # <- "cuda:0" 
+    num_threads=accelerator_options.num_threads,
+)
+
+# From picture_description_vlm_model.py (only if VLM enabled)
+self.model = AutoModelForVision2Seq.from_pretrained(
+    artifacts_path,
+    torch_dtype=torch.bfloat16,
+).to(self.device)  # <- "cuda:0"
+```
+
+### 4. Docling Processing Pipeline
+
+**StandardPdfPipeline (Default):**
+1. **PagePreprocessing** - Image scaling and preparation
+2. **OCR** - Text extraction (EasyOCR/Tesseract)
+3. **LayoutModel** - Page layout detection (CV model)
+4. **TableStructureModel** - Table structure analysis (CV model)
+5. **PageAssemble** - Combine detected elements
+6. **Optional**: Code/Formula detection (CV model)
+7. **Optional**: Picture classification (CV model)
+8. **Optional**: Picture description (VLM - only if enabled)
+
+**VlmPipeline (Alternative):**
+- Uses VLMs (SmolVLM/Granite) for end-to-end document conversion
+- Still uses CV models for initial processing
+- VLM generates final document structure
+
+### 5. External LLM Dependency: NONE
+
+**Docling is completely self-contained:**
+- ✅ All required models downloaded from HuggingFace
+- ✅ No external API calls to Ollama for document processing
+- ✅ Can run entirely offline after model download
+- ✅ Only uses GPU for CV model acceleration, not LLM inference
+
+**External LLM Usage: Only Optional**
+- Picture description via API (if configured)
+- Ollama integration for VLM tasks (if enabled)
+- **NOT used for core document parsing**
+
+### 6. Model Storage and Downloads
+
+**HuggingFace Repositories:**
+- `ds4sd/docling-models` (Layout + TableFormer)
+- `HuggingFaceTB/SmolVLM-256M-Instruct` (Optional VLM)
+- `ibm-granite/granite-vision-3.1-2b-preview` (Optional VLM)
+
+**Local Storage:**
+- Models cached in `~/.cache/huggingface/hub/`
+- Can specify custom `artifacts_path` for model storage
+
+### 7. Configuration Evidence
+
+**Default Configuration (No External LLMs):**
+```python
+# Default PDF pipeline options
+PdfPipelineOptions(
+    do_picture_description=False,  # No VLM by default
+    picture_description_options=smolvlm_picture_description,  # Built-in VLM
+    # No external API configuration required
+)
+```
+
+**External API Only If Explicitly Configured:**
+```python
+# Only if user chooses API-based picture description
+PictureDescriptionApiOptions(
+    url=AnyUrl("http://localhost:8000/v1/chat/completions"),
+    # Requires manual configuration
+)
+```
+
+### 8. Conclusion
+
+**Docling Architecture Summary:**
+- **Core Processing**: Traditional computer vision models (object detection, OCR)
+- **Advanced Features**: Small vision-language models (256M-2B parameters)
+- **External LLMs**: NOT required, only optional for specific features
+- **GPU Usage**: CV model acceleration, not LLM inference
+- **Self-Contained**: Complete document processing without external dependencies
+
+**Your Ollama LLMs are NOT being used by Docling for document processing.**
+
 ---
-*Last updated: 2025-06-08 - LightRAG source information analysis completed*
+*Last updated: 2025-06-09 - Docling architecture investigation completed*

@@ -96,6 +96,21 @@ class LightRAGService:
         else:
             return response
     
+    async def direct_llm_query(self, prompt: str, system_prompt: str = None) -> str:
+        """Direct LLM query without RAG retrieval"""
+        try:
+            # Use the underlying LLM function directly
+            if system_prompt:
+                full_prompt = f"System: {system_prompt}\n\nUser: {prompt}"
+            else:
+                full_prompt = prompt
+                
+            response = await self.rag.llm_model_func(full_prompt, **self.rag.llm_model_kwargs)
+            return response
+        except Exception as e:
+            logger.error(f"Direct LLM query failed: {e}")
+            raise e
+    
     async def get_graph_data(self) -> Dict[str, Any]:
         """Get knowledge graph data"""
         if not self.rag:
