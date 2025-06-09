@@ -81,10 +81,25 @@ Thumbs.db
 *.pptx
 
 # RAG working directories and cache
-rag_data/
+generated_data/
 test_rag_data/
 *.json
 !.env.example
+
+# Storage directories (Docker managed)
+storage/
+models/
+
+# Old storage directories (can be removed after verification)
+/vllm_cache/
+/rag_data/
+/redis_data/
+
+# Legacy directories from cleanup (safe to remove)
+/test_basic_rag_old/
+/vllm_cache_old/
+/rag_data_old/
+/redis_data_old/
 
 # Logs
 logs/
@@ -96,15 +111,9 @@ api.log
 *.sqlite
 *.sqlite3
 
-# Vector databases
-qdrant_storage/
-qdrant_data/
-
-# Redis data
-redis_data/
-
-# Ollama models
-ollama_models/
+# Temporary files and samples
+temp/
+*_sample.txt
 
 # Docker volumes
 docker-volumes/

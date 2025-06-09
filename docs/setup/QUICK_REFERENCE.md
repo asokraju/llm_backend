@@ -81,14 +81,14 @@ python run_tests.py
 
 | Service | URL | Purpose |
 |---------|-----|---------|
-| **API** | http://localhost:8000 | Main REST API |
-| **API Docs** | http://localhost:8000/api/docs | Swagger UI |
-| **Ollama** | http://localhost:11434 | LLM Service |
-| **Qdrant** | http://localhost:6333 | Vector Database |
-| **Qdrant UI** | http://localhost:6333/dashboard | Qdrant Dashboard |
-| **Prometheus** | http://localhost:9090 | Metrics |
-| **Grafana** | http://localhost:3000 | Dashboards (admin/admin) |
-| **Redis** | redis://localhost:6379 | Cache/Queue |
+| **API** | http://localhost:9000 | Main REST API |
+| **API Docs** | http://localhost:9000/api/docs | Swagger UI |
+| **Ollama** | http://localhost:12434 | LLM Service |
+| **Qdrant** | http://localhost:7333 | Vector Database |
+| **Qdrant UI** | http://localhost:7333/dashboard | Qdrant Dashboard |
+| **Prometheus** | http://localhost:10090 | Metrics |
+| **Grafana** | http://localhost:4000 | Dashboards (admin/admin) |
+| **Redis** | redis://localhost:7379 | Cache/Queue |
 
 ## 📡 Common API Calls
 
@@ -237,7 +237,7 @@ documents_processed_total
 ```
 
 ### Grafana Access
-1. Open http://localhost:3000
+1. Open http://localhost:4000
 2. Login: admin / admin
 3. Dashboard: "RAG System Metrics"
 

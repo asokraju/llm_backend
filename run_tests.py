@@ -69,12 +69,12 @@ class TestRunner:
         self.print_header("🔍 Checking Service Health")
         
         services = [
-            ("Ollama", "http://localhost:11434/api/version"),
-            ("Qdrant", "http://localhost:6333/health"),
-            ("Redis", "http://localhost:6379"),  # Will fail but that's ok
-            ("Prometheus", "http://localhost:9090/-/healthy"),
-            ("Grafana", "http://localhost:3000/api/health"),
-            ("API", "http://localhost:8000/health")
+            ("Ollama", "http://localhost:12434/api/version"),  # Updated port
+            ("Qdrant", "http://localhost:7333/"),  # Qdrant uses root endpoint, updated port
+            ("Redis", "http://localhost:7379"),  # Updated port
+            ("Prometheus", "http://localhost:10090/-/healthy"),  # Updated port
+            ("Grafana", "http://localhost:4000/api/health"),  # Updated port
+            ("API", "http://localhost:9000/health")  # Updated port
         ]
         
         all_ok = True
@@ -105,10 +105,10 @@ class TestRunner:
                 import socket
                 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 sock.settimeout(2)
-                result = sock.connect_ex(('localhost', 6379))
+                result = sock.connect_ex(('localhost', 7379))
                 sock.close()
                 if result == 0:
-                    print(f"Checking Redis... {COLORS['GREEN']}✓ Running (port 6379 open){COLORS['RESET']}")
+                    print(f"Checking Redis... {COLORS['GREEN']}✓ Running (port 7379 open){COLORS['RESET']}")
                     redis_ok = True
                 else:
                     print(f"Checking Redis... {COLORS['RED']}✗ Not running{COLORS['RESET']}")

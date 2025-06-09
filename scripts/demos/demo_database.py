@@ -6,11 +6,16 @@ This creates a working demonstration of the knowledge graph functionality.
 
 import asyncio
 import os
+import sys
 import logging
 from pathlib import Path
 from typing import List
 import PyPDF2
 import requests
+
+# Add src directory to Python path for imports
+sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
+
 from src.rag.lightrag_service import LightRAGService
 
 

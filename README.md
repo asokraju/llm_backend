@@ -6,11 +6,11 @@ A production-ready RAG (Retrieval-Augmented Generation) system built with LightR
 
 | Document | Description |
 |----------|-------------|
-| [QUICK_REFERENCE.md](QUICK_REFERENCE.md) | Quick commands, URLs, and common operations |
-| [SERVICES.md](SERVICES.md) | Detailed guide for all 7 services |
-| [TESTING.md](TESTING.md) | Comprehensive testing documentation |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | System design and architecture |
-| [DEPLOYMENT.md](DEPLOYMENT.md) | Production deployment guide |
+| [docs/setup/QUICK_REFERENCE.md](docs/setup/QUICK_REFERENCE.md) | Quick commands, URLs, and common operations |
+| [docs/setup/SERVICES.md](docs/setup/SERVICES.md) | Detailed guide for all 7 services |
+| [docs/reports/TESTING.md](docs/reports/TESTING.md) | Comprehensive testing documentation |
+| [docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md) | System design and architecture |
+| [docs/setup/DEPLOYMENT.md](docs/setup/DEPLOYMENT.md) | Production deployment guide |
 
 ## 🚀 Features
 
@@ -533,7 +533,7 @@ python run_tests.py --integration
 python run_tests.py --infrastructure
 ```
 
-For detailed testing documentation, see [TESTING.md](TESTING.md).
+For detailed testing documentation, see [docs/reports/TESTING.md](docs/reports/TESTING.md).
 
 ### Code Quality
 

@@ -133,6 +133,92 @@ curl http://localhost:8000/metrics
 - [ ] Configure Redis for async task queue
 - [ ] Deploy with Docker when Docker is available
 
+## Recently Completed ✅
+- [x] Fixed import paths in all Python scripts in scripts/demos/ directory
+  - Fixed demo_lightrag_docling.py - Added sys.path.append for src imports
+  - Fixed demo_database.py - Added sys.path.append for src imports  
+  - Fixed build_database_lightrag.py - Added sys.path.append for src imports
+
+## Repository Cleanup & Organization 🧹
+
+### Files to Consolidate or Move (Root Directory Analysis)
+
+#### 1. Markdown Documentation Files (13 files in root)
+**Current**: All scattered in root directory
+**Proposed**: Create `/docs` directory and organize by category
+- Architecture & Design: `ARCHITECTURE.md`, `DEPLOYMENT.md`
+- Setup & Guides: `QUICK_REFERENCE.md`, `TUTORIAL.md`, `COMPLETE_SETUP_GUIDE.md`
+- Status Reports: `DATABASE_STATUS.md`, `SYSTEM_READY.md`, `PORT_CHANGES.md`
+- Development: `TESTING.md`, `SERVICES.md`
+- Keep in root: `README.md`, `TODO.md`, `CLAUDE.md` (project-specific instructions)
+
+#### 2. Test/Demo Python Files (8 files in root)
+**Current**: Test and demo scripts mixed in root
+**Proposed**: Move to appropriate subdirectories
+- Move to `/scripts/demos/`: 
+  - `demo_database.py`
+  - `demo_lightrag_docling.py`
+  - `build_database.py`
+  - `build_database_lightrag.py`
+- Move to `/scripts/tests/`:
+  - `test_basic_functionality.py`
+  - `test_docling_direct.py`
+- Keep in root: `run_api.py`, `run_tests.py` (main entry points)
+
+#### 3. Generated RAG Data Directories (5 directories)
+**Current**: Multiple RAG data directories in root
+**Proposed**: Create `/generated_data/` directory
+- Move: `clinical_data_rag/`, `demo_clinical_rag/`, `test_basic_rag/`
+- Keep: `rag_data/` (empty, appears to be the intended storage location)
+
+#### 4. Sample/Temporary Files (2 files)
+**Current**: Sample output files in root
+**Proposed**: Move to `/temp/` or delete if not needed
+- `docling_sample.txt`
+- `pypdf2_sample.txt`
+
+#### 5. Database Storage Directories
+**Current**: Mixed with other directories
+**Proposed**: Already well organized, but could benefit from grouping
+- Keep as is: `qdrant_storage/`, `redis_data/` (Docker volume mounts)
+- Consider: Creating `/storage/` parent directory for all persistent data
+
+#### 6. Model Cache Directories
+**Current**: Model caches in root
+**Proposed**: Create `/models/` directory
+- Move: `ollama_models/`, `vllm_cache/`
+- Benefits: Cleaner root, easier to manage model storage
+
+#### 7. Log Directory
+**Current**: Empty `logs/` directory
+**Note**: `LightRAG/lightrag.log` exists inside LightRAG directory
+**Proposed**: Configure all logging to use `/logs/` directory
+
+#### 8. Build/Package Files
+**Current**: Package build artifacts
+**Proposed**: Add to `.gitignore` if not already
+- `LightRAG/lightrag_hku.egg-info/` (build artifact)
+
+### Summary of Proposed Structure
+```
+/llm_backend/
+├── README.md
+├── TODO.md
+├── CLAUDE.md
+├── docker-compose.yml
+├── requirements.txt
+├── run_api.py
+├── run_tests.py
+├── /docs/               # All documentation except README, TODO, CLAUDE
+├── /scripts/            # Demo and test scripts
+│   ├── /demos/
+│   └── /tests/
+├── /generated_data/     # Generated RAG databases
+├── /models/             # Model caches (ollama, vllm)
+├── /storage/            # Persistent storage (qdrant, redis)
+├── /temp/               # Temporary files
+└── /src/                # Source code (already organized)
+
 ## Issues & Solutions Log
 
 ### Issue 1: Docker not available in WSL
@@ -257,5 +343,165 @@ Created comprehensive infrastructure test suite with **6 specialized test files*
 
 **Conclusion**: Infrastructure is production-ready with all core functionality verified. The remaining failures are minor implementation details that don't affect core system operation.
 
+## LightRAG Source Information Analysis 📚
+
+### ✅ COMPREHENSIVE SOURCE TRACKING CONFIRMED
+
+**LightRAG provides extensive methods for retrieving source information and raw context data:**
+
+### 1. Raw Context Retrieval Methods
+
+**Primary Method - `only_need_context=True`:**
+```python
+# Get raw context with complete source information
+context = await rag.aquery(
+    "query", 
+    param=QueryParam(mode="hybrid", only_need_context=True)
+)
+```
+
+**Alternative Methods:**
+- `only_need_prompt=True`: Returns generated prompt with context
+- Direct vector database access via `chunks_vdb.query()`
+- Entity/relationship vector queries via `entities_vdb.query()` and `relationships_vdb.query()`
+- Knowledge graph traversal via `chunk_entity_relation_graph` methods
+
+### 2. Query Parameters & Modes
+
+**Query Modes:**
+- `"local"`: Entity-based retrieval with context-dependent information
+- `"global"`: Relationship-based retrieval using global knowledge  
+- `"hybrid"`: Combines local and global methods (recommended)
+- `"naive"`: Basic vector search without knowledge graph
+- `"mix"`: Integrates knowledge graph and vector retrieval
+- `"bypass"`: Direct LLM usage without retrieval
+
+**Source-Relevant Parameters:**
+- `only_need_context=True`: ✅ Returns raw context with ALL source metadata
+- `only_need_prompt=True`: Returns generated prompt with context data
+- `top_k`: Number of items to retrieve (default: 60)
+- `ids`: Filter by specific document IDs for targeted retrieval
+- `max_token_for_text_unit`: Controls chunk context size (default: 4000)
+- `conversation_history`: Multi-turn conversation support
+
+### 3. Source Information Structure
+
+**Every piece of retrieved data includes:**
+1. **File Path**: `file_path` field in all entities, relationships, and chunks
+2. **Source ID**: `source_id` linking content to originating chunks
+3. **Timestamps**: `created_at` for temporal tracking
+4. **Metadata**: Entity types, relationship weights, chunk order
+
+**Context JSON Structure:**
+```json
+{
+  "entities": [
+    {
+      "id": 1,
+      "entity": "entity_name",
+      "type": "PERSON",
+      "description": "...",
+      "rank": 5,
+      "created_at": "2024-01-01 12:00:00",
+      "file_path": "document.pdf"
+    }
+  ],
+  "relationships": [
+    {
+      "id": 1,
+      "entity1": "A",
+      "entity2": "B", 
+      "description": "...",
+      "keywords": "...",
+      "weight": 1.0,
+      "rank": 3,
+      "created_at": "2024-01-01 12:00:00",
+      "file_path": "document.pdf"
+    }
+  ],
+  "chunks": [
+    {
+      "id": 1,
+      "content": "actual text content...",
+      "file_path": "document.pdf"
+    }
+  ]
+}
+```
+
+### 4. Direct Storage Access Methods
+
+**Vector Database Query:**
+```python
+# Direct chunk retrieval with metadata
+results = await rag.chunks_vdb.query(query, top_k=10)
+# Returns: [{"content": "...", "file_path": "...", "created_at": ...}]
+
+# Entity retrieval
+entities = await rag.entities_vdb.query(query, top_k=10) 
+# Returns: [{"entity_name": "...", "file_path": "...", "source_id": "..."}]
+
+# Relationship retrieval  
+relationships = await rag.relationships_vdb.query(query, top_k=10)
+# Returns: [{"src_id": "...", "tgt_id": "...", "file_path": "...", "source_id": "..."}]
+```
+
+**Knowledge Graph Access:**
+```python
+# Get node with metadata
+node_data = await rag.chunk_entity_relation_graph.get_node(entity_name)
+# Returns: {"entity_type": "...", "description": "...", "source_id": "...", "file_path": "..."}
+
+# Get edge with metadata
+edge_data = await rag.chunk_entity_relation_graph.get_edge(src, tgt)
+# Returns: {"description": "...", "keywords": "...", "source_id": "...", "file_path": "..."}
+```
+
+### 5. Implementation Strategies
+
+**Strategy 1: Context-Only Queries**
+```python
+# Get raw context data for custom processing
+param = QueryParam(mode="hybrid", only_need_context=True, top_k=20)
+context = await rag.aquery("query", param=param)
+# Parse JSON context to extract sources and create citations
+```
+
+**Strategy 2: Custom Citation Prompts**
+```python
+# Use custom prompts to instruct LLM to include citations
+param = QueryParam(
+    mode="hybrid",
+    user_prompt="Please cite sources using [filename, page] format"
+)
+response = await rag.aquery("query", param=param)
+```
+
+**Strategy 3: Two-Step Process**
+```python
+# Step 1: Get context with sources
+context = await rag.aquery("query", QueryParam(only_need_context=True))
+# Step 2: Process context to create citations
+# Step 3: Generate response with citations
+```
+
+### 6. LightRAG Source Features ✅
+
+✅ **File Path Tracking**: Every data point includes originating file  
+✅ **Chunk Source IDs**: Links entities/relationships to source chunks  
+✅ **Temporal Metadata**: Creation timestamps for all data  
+✅ **Multi-document Support**: Handles multiple source documents  
+✅ **Document ID Filtering**: Can filter by specific document IDs  
+✅ **Raw Context Access**: Complete context data available via API  
+✅ **Vector Search Metadata**: Source info preserved in vector searches  
+✅ **Knowledge Graph Sources**: Graph nodes/edges include source attribution
+
+### 7. Next Steps for Citation Implementation
+- [ ] Create citation parser for LightRAG context JSON format
+- [ ] Implement citation-aware response formatter
+- [ ] Add citation extraction utilities
+- [ ] Design academic citation format templates
+- [ ] Create source-aware prompt templates
+
 ---
-*Last updated: 2025-05-28 - Infrastructure testing completed*
+*Last updated: 2025-06-08 - LightRAG source information analysis completed*

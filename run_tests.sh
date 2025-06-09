@@ -109,7 +109,7 @@ check_services() {
     
     # Check Ollama
     echo -n "Checking Ollama... "
-    if curl -s http://localhost:11434/api/version > /dev/null 2>&1; then
+    if curl -s http://localhost:12434/api/version > /dev/null 2>&1; then
         echo -e "${GREEN}✓ Running${NC}"
     else
         echo -e "${RED}✗ Not running${NC}"
@@ -118,7 +118,7 @@ check_services() {
     
     # Check Qdrant
     echo -n "Checking Qdrant... "
-    if curl -s http://localhost:6333/health > /dev/null 2>&1; then
+    if curl -s http://localhost:7333/ > /dev/null 2>&1; then
         echo -e "${GREEN}✓ Running${NC}"
     else
         echo -e "${RED}✗ Not running${NC}"
@@ -128,11 +128,11 @@ check_services() {
     # Check Redis
     echo -n "Checking Redis... "
     # Try different methods to check Redis
-    if redis-cli ping > /dev/null 2>&1; then
+    if redis-cli -h localhost -p 7379 ping > /dev/null 2>&1; then
         echo -e "${GREEN}✓ Running${NC}"
-    elif nc -z localhost 6379 2>/dev/null; then
-        echo -e "${GREEN}✓ Running (port 6379 open)${NC}"
-    elif timeout 2 bash -c 'cat < /dev/null > /dev/tcp/localhost/6379' 2>/dev/null; then
+    elif nc -z localhost 7379 2>/dev/null; then
+        echo -e "${GREEN}✓ Running (port 7379 open)${NC}"
+    elif timeout 2 bash -c 'cat < /dev/null > /dev/tcp/localhost/7379' 2>/dev/null; then
         echo -e "${GREEN}✓ Running (port accessible)${NC}"
     else
         # Final check - see if docker container is running
@@ -146,7 +146,7 @@ check_services() {
     
     # Check Prometheus
     echo -n "Checking Prometheus... "
-    if curl -s http://localhost:9090/-/healthy > /dev/null 2>&1; then
+    if curl -s http://localhost:10090/-/healthy > /dev/null 2>&1; then
         echo -e "${GREEN}✓ Running${NC}"
     else
         echo -e "${RED}✗ Not running${NC}"
@@ -155,7 +155,7 @@ check_services() {
     
     # Check Grafana
     echo -n "Checking Grafana... "
-    if curl -s http://localhost:3000/api/health > /dev/null 2>&1; then
+    if curl -s http://localhost:4000/api/health > /dev/null 2>&1; then
         echo -e "${GREEN}✓ Running${NC}"
     else
         echo -e "${YELLOW}⚠ Not running (optional)${NC}"
@@ -163,7 +163,7 @@ check_services() {
     
     # Check API
     echo -n "Checking API... "
-    if curl -s http://localhost:8000/health > /dev/null 2>&1; then
+    if curl -s http://localhost:9000/health > /dev/null 2>&1; then
         echo -e "${GREEN}✓ Running${NC}"
     else
         echo -e "${YELLOW}⚠ Not running (will start if needed)${NC}"

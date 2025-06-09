@@ -17,7 +17,7 @@ from datetime import datetime
 def test_api_service():
     """Test main API service."""
     print("\n=== Testing API Service ===")
-    base_url = "http://localhost:8000"
+    base_url = "http://localhost:9000"
     
     # Health check
     response = requests.get(f"{base_url}/health")
@@ -41,7 +41,7 @@ def test_api_service():
 def test_ollama_service():
     """Test Ollama LLM service."""
     print("\n=== Testing Ollama Service ===")
-    base_url = "http://localhost:11434"
+    base_url = "http://localhost:12434"
     
     # Check version
     version = requests.get(f"{base_url}/api/version")
@@ -81,7 +81,7 @@ def test_qdrant_service():
     print("\n=== Testing Qdrant Service ===")
     
     # Connect to Qdrant
-    client = QdrantClient(host="localhost", port=6333)
+    client = QdrantClient(host="localhost", port=7333)
     
     # Get collections
     collections = client.get_collections()
@@ -126,7 +126,7 @@ def test_redis_service():
     print("\n=== Testing Redis Service ===")
     
     # Connect to Redis
-    r = redis.Redis(host='localhost', port=6379, decode_responses=True)
+    r = redis.Redis(host='localhost', port=7379, decode_responses=True)
     
     # Test connection
     pong = r.ping()
@@ -153,7 +153,7 @@ def test_redis_service():
 def test_prometheus_service():
     """Test Prometheus metrics service."""
     print("\n=== Testing Prometheus Service ===")
-    base_url = "http://localhost:9090"
+    base_url = "http://localhost:10090"
     
     # Check health
     health = requests.get(f"{base_url}/-/healthy")
@@ -177,7 +177,7 @@ def test_prometheus_service():
 def test_grafana_service():
     """Test Grafana visualization service."""
     print("\n=== Testing Grafana Service ===")
-    base_url = "http://localhost:3000"
+    base_url = "http://localhost:4000"
     
     # Check health
     health = requests.get(f"{base_url}/api/health")

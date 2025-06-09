@@ -19,8 +19,8 @@ class LightRAGService:
     
     def __init__(self, 
                  working_dir: str = "./rag_data",
-                 llm_host: str = "http://localhost:11434",
-                 llm_model: str = "qwen2.5:32b-instruct-q4_K_M",
+                 llm_host: str = "http://localhost:12434",
+                 llm_model: str = "qwen2.5:7b-instruct",
                  embedding_model: str = "nomic-embed-text",
                  embedding_dim: int = 768):
         

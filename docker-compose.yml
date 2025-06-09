@@ -1,15 +1,13 @@
-version: '3.8'
-
 services:
   # Vector Database
   qdrant:
     image: qdrant/qdrant:v1.10.1
     container_name: rag_qdrant
     ports:
-      - "6333:6333"
-      - "6334:6334"
+      - "7333:6333"
+      - "7334:6334"
     volumes:
-      - ./qdrant_storage:/qdrant/storage
+      - ./storage/qdrant_storage:/qdrant/storage
     environment:
       - QDRANT__SERVICE__GRPC_PORT=6334
     restart: unless-stopped
@@ -17,7 +15,7 @@ services:
       - rag_network
     labels:
       - "prometheus.io/scrape=true"
-      - "prometheus.io/port=6333"
+      - "prometheus.io/port=7333"
       - "prometheus.io/path=/metrics"
 
   # LLM and Embeddings
@@ -25,9 +23,9 @@ services:
     image: ollama/ollama:latest
     container_name: rag_ollama
     ports:
-      - "11434:11434"
+      - "12434:11434"
     volumes:
-      - ./ollama_models:/root/.ollama
+      - ./models/ollama_models:/root/.ollama
     environment:
       - OLLAMA_HOST=0.0.0.0
     deploy:
@@ -46,9 +44,9 @@ services:
     image: redis:7-alpine
     container_name: rag_redis
     ports:
-      - "6379:6379"
+      - "7379:6379"
     volumes:
-      - ./redis_data:/data
+      - ./storage/redis_data:/data
     command: redis-server --appendonly yes
     restart: unless-stopped
     networks:
@@ -59,7 +57,7 @@ services:
     image: prom/prometheus:latest
     container_name: rag_prometheus
     ports:
-      - "9090:9090"
+      - "10090:9090"
     volumes:
       - ./configs/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
@@ -77,7 +75,7 @@ services:
     image: grafana/grafana:latest
     container_name: rag_grafana
     ports:
-      - "3000:3000"
+      - "4000:3000"
     volumes:
       - grafana_data:/var/lib/grafana
       - ./configs/grafana/provisioning:/etc/grafana/provisioning
@@ -98,7 +96,7 @@ services:
     build: .
     container_name: rag_api
     ports:
-      - "8000:8000"
+      - "9000:8000"
     environment:
       - RAG_LLM_HOST=http://ollama:11434
       - RAG_QDRANT_HOST=http://qdrant:6333
@@ -106,8 +104,9 @@ services:
       - RAG_PROMETHEUS_HOST=http://prometheus:9090
       - RAG_LOG_LEVEL=INFO
       - RAG_API_KEY_ENABLED=false  # Set to true in production
+      - DOCUMENT_LOADING_ENGINE=DOCLING  # Use DOCLING for PDF processing
     volumes:
-      - ./rag_data:/app/rag_data
+      - ./generated_data/rag_data:/app/rag_data
       - ./logs:/app/logs
     depends_on:
       - ollama
@@ -119,7 +118,7 @@ services:
       - rag_network
     labels:
       - "prometheus.io/scrape=true"
-      - "prometheus.io/port=8000"
+      - "prometheus.io/port=9000"
       - "prometheus.io/path=/metrics"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
